@@ -9,19 +9,32 @@ import { deriveSidebarStateBucket } from "@/utils/sidebar-agent-state";
 import { getStatusDotColor } from "@/utils/status-dot-color";
 import { STATUS_INDICATOR_FILLED_DOT_SIZE } from "@/utils/status-indicator-geometry";
 
-export function AgentStatusDot({
-  status,
-  requiresAttention,
-  attentionReason,
-  pendingPermissionCount,
-  showInactive = false,
-}: {
+interface AgentStatusDotProps {
   status: string | null | undefined;
   requiresAttention: boolean | null | undefined;
   attentionReason?: "finished" | "error" | "permission" | null;
   pendingPermissionCount?: number;
   showInactive?: boolean;
-}) {
+}
+
+export function AgentStatusDot(props: AgentStatusDotProps) {
+  const color = useAgentStatusDotColor(props);
+
+  if (!color) {
+    return null;
+  }
+
+  return <AgentStatusDotView color={color} />;
+}
+
+/** The color `AgentStatusDot` draws, or null when it draws nothing. */
+export function useAgentStatusDotColor({
+  status,
+  requiresAttention,
+  attentionReason,
+  pendingPermissionCount,
+  showInactive = false,
+}: AgentStatusDotProps): string | null {
   const { theme } = useUnistyles();
 
   if (!status) {
@@ -37,13 +50,7 @@ export function AgentStatusDot({
     attentionReason: attentionReason ?? null,
     pendingPermissionCount: pendingPermissionCount ?? 0,
   });
-  const color = getStatusDotColor({ theme, bucket, showDoneAsInactive: showInactive });
-
-  if (!color) {
-    return null;
-  }
-
-  return <AgentStatusDotView color={color} />;
+  return getStatusDotColor({ theme, bucket, showDoneAsInactive: showInactive });
 }
 
 function AgentStatusDotView({ color }: { color: string }) {
