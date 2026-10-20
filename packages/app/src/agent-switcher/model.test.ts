@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
 import {
   CLOSED_AGENT_SWITCHER,
+  listAgentSwitcherSessions,
   selectAgentSwitcherIndex,
   selectedAgentSession,
   stepAgentSwitcher,
@@ -112,5 +113,56 @@ describe("agent switcher", () => {
 
   it("selects nothing while closed", () => {
     expect(selectedAgentSession(CLOSED_AGENT_SWITCHER)).toBeNull();
+  });
+});
+
+describe("agent switcher list", () => {
+  const delta = session("delta");
+  const openable = [
+    { ...alpha, lastActivityAt: 300 },
+    { ...beta, lastActivityAt: 100 },
+    { ...gamma, lastActivityAt: 400 },
+    { ...delta, lastActivityAt: 200 },
+  ];
+
+  it("lists sessions in the order they were last viewed, leaving out ones that cannot open", () => {
+    const list = listAgentSwitcherSessions({
+      order: "lastViewed",
+      recentlyViewed: [beta, session("archived"), alpha],
+      sessions: openable,
+      limit: 10,
+    });
+
+    expect(list).toEqual([beta, alpha]);
+  });
+
+  it("lists every session by its last activity, newest first, viewed or not", () => {
+    const list = listAgentSwitcherSessions({
+      order: "lastActivity",
+      recentlyViewed: [beta],
+      sessions: openable,
+      limit: 10,
+    });
+
+    expect(list).toEqual([gamma, alpha, delta, beta]);
+  });
+
+  it("keeps only as many sessions as the limit allows", () => {
+    expect(
+      listAgentSwitcherSessions({
+        order: "lastActivity",
+        recentlyViewed: [],
+        sessions: openable,
+        limit: 2,
+      }),
+    ).toEqual([gamma, alpha]);
+    expect(
+      listAgentSwitcherSessions({
+        order: "lastViewed",
+        recentlyViewed: [delta, beta, alpha],
+        sessions: openable,
+        limit: 2,
+      }),
+    ).toEqual([delta, beta]);
   });
 });

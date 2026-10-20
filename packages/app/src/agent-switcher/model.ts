@@ -45,6 +45,30 @@ export function selectAgentSwitcherIndex(
   return { ...state, index };
 }
 
+export type AgentSwitcherOrder = "lastViewed" | "lastActivity";
+
+export interface OpenableAgentSession extends RecentAgentSession {
+  lastActivityAt: number;
+}
+
+/** The sessions the switcher lists, first to last, cut to the limit. */
+export function listAgentSwitcherSessions(input: {
+  order: AgentSwitcherOrder;
+  recentlyViewed: readonly RecentAgentSession[];
+  sessions: readonly OpenableAgentSession[];
+  limit: number;
+}): RecentAgentSession[] {
+  const ordered =
+    input.order === "lastViewed"
+      ? input.recentlyViewed.filter((viewed) =>
+          input.sessions.some((candidate) => isSameSession(candidate, viewed)),
+        )
+      : [...input.sessions]
+          .sort((left, right) => right.lastActivityAt - left.lastActivityAt)
+          .map(({ serverId, agentId }) => ({ serverId, agentId }));
+  return ordered.slice(0, input.limit);
+}
+
 export function selectedAgentSession(state: AgentSwitcherState): RecentAgentSession | null {
   return state.status === "open" ? (state.sessions[state.index] ?? null) : null;
 }

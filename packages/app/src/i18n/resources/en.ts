@@ -2155,9 +2155,26 @@ export const en = {
       editProject: "Edit {{projectName}}",
     },
     groupInfo: "About {{title}}",
+    sessionSwitcher: {
+      title: "Session switcher",
+      info: "Hold Option and press Tab to open it. In the Windows and Linux desktop app, use Ctrl+Tab.",
+      order: {
+        label: "Order",
+        description: "Which sessions come first in the switcher.",
+        options: {
+          lastViewed: "Last viewed",
+          lastActivity: "Last activity",
+        },
+      },
+      maxSessions: {
+        label: "Sessions shown",
+        description: "The most sessions the switcher lists, from 2 to 15.",
+      },
+    },
     sections: {
       general: "General",
       chat: "Chat",
+      sessionSwitcher: "Session switcher",
       appearance: "Appearance",
       sidebar: "Sidebar",
       editor: "Editor",

@@ -1,3 +1,10 @@
+import { queryClient as appQueryClient } from "@/data/query-client";
+import {
+  APP_SETTINGS_QUERY_KEY,
+  DEFAULT_AGENT_SWITCHER_PREFERENCES,
+  type AgentSwitcherPreferences,
+  type AppSettings,
+} from "@/hooks/use-settings/storage";
 import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
 import { getRecentAgentSessions } from "@/stores/recent-agent-sessions";
 import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
@@ -5,15 +12,34 @@ import { useSessionStore } from "@/stores/session-store";
 import { navigateToAgent } from "@/utils/navigate-to-agent";
 import {
   CLOSED_AGENT_SWITCHER,
+  listAgentSwitcherSessions,
   selectAgentSwitcherIndex,
   selectedAgentSession,
   stepAgentSwitcher,
+  type OpenableAgentSession,
 } from "./model";
 
-function canOpen({ serverId, agentId }: RecentAgentSession): boolean {
-  const session = useSessionStore.getState().sessions[serverId];
-  const agent = session?.agents.get(agentId) ?? session?.agentDetails.get(agentId);
-  return agent !== undefined && !agent.archivedAt;
+function getAgentSwitcherPreferences(): AgentSwitcherPreferences {
+  return (
+    appQueryClient.getQueryData<AppSettings>(APP_SETTINGS_QUERY_KEY)?.agentSwitcher ??
+    DEFAULT_AGENT_SWITCHER_PREFERENCES
+  );
+}
+
+function getOpenableAgentSessions(): OpenableAgentSession[] {
+  const state = useSessionStore.getState();
+  const openable: OpenableAgentSession[] = [];
+  for (const [serverId, session] of Object.entries(state.sessions)) {
+    for (const agent of session?.agents.values() ?? []) {
+      if (agent.archivedAt) {
+        continue;
+      }
+      // The sidebar's activity time: the live value when there is one, else the agent's own.
+      const lastActivityAt = state.agentLastActivity.get(agent.id) ?? agent.lastActivityAt;
+      openable.push({ serverId, agentId: agent.id, lastActivityAt: lastActivityAt.getTime() });
+    }
+  }
+  return openable;
 }
 
 function getFocusedAgentSession(): RecentAgentSession | null {
@@ -28,9 +54,15 @@ function getFocusedAgentSession(): RecentAgentSession | null {
 /** Opens the switcher or moves its selection. Returns whether it is open afterwards. */
 export function stepAgentSwitcherFromKeyboard(delta: 1 | -1): boolean {
   const store = useKeyboardShortcutsStore.getState();
+  const preferences = getAgentSwitcherPreferences();
   const next = stepAgentSwitcher(store.agentSwitcher, {
     delta,
-    sessions: getRecentAgentSessions().filter(canOpen),
+    sessions: listAgentSwitcherSessions({
+      order: preferences.order,
+      recentlyViewed: getRecentAgentSessions(),
+      sessions: getOpenableAgentSessions(),
+      limit: preferences.maxSessions,
+    }),
     current: getFocusedAgentSession(),
   });
   store.setAgentSwitcher(next);

@@ -2178,9 +2178,26 @@ export const es: TranslationResources = {
       editProject: "Editar{{projectName}}",
     },
     groupInfo: "Acerca de{{title}}",
+    sessionSwitcher: {
+      title: "Cambio de sesión",
+      info: "Mantén Option y pulsa Tab para abrirlo. En la app de escritorio de Windows y Linux, usa Ctrl+Tab.",
+      order: {
+        label: "Orden",
+        description: "Qué sesiones aparecen primero en el selector.",
+        options: {
+          lastViewed: "Vista por última vez",
+          lastActivity: "Última actividad",
+        },
+      },
+      maxSessions: {
+        label: "Sesiones mostradas",
+        description: "Número máximo de sesiones en la lista, de 2 a 15.",
+      },
+    },
     sections: {
       general: "General",
       chat: "Chat",
+      sessionSwitcher: "Cambio de sesión",
       appearance: "Apariencia",
       sidebar: "Barra lateral",
       terminal: "Terminal",
