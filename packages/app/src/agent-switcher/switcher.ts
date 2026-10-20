@@ -55,15 +55,18 @@ function getFocusedAgentSession(): RecentAgentSession | null {
 export function stepAgentSwitcherFromKeyboard(delta: 1 | -1): boolean {
   const store = useKeyboardShortcutsStore.getState();
   const preferences = getAgentSwitcherPreferences();
+  const current = getFocusedAgentSession();
   const next = stepAgentSwitcher(store.agentSwitcher, {
     delta,
     sessions: listAgentSwitcherSessions({
       order: preferences.order,
       recentlyViewed: getRecentAgentSessions(),
       sessions: getOpenableAgentSessions(),
+      current,
+      now: Date.now(),
       limit: preferences.maxSessions,
     }),
-    current: getFocusedAgentSession(),
+    current,
   });
   store.setAgentSwitcher(next);
   return next.status === "open";

@@ -5,6 +5,11 @@ export interface RecentAgentSession {
   agentId: string;
 }
 
+export interface ViewedAgentSession extends RecentAgentSession {
+  /** When it was last on screen, in epoch ms; null for a session saved before times were kept. */
+  viewedAt: number | null;
+}
+
 export interface RecentAgentSessionsStorage {
   read(): Promise<string | null>;
   write(value: string): Promise<void>;
@@ -13,12 +18,15 @@ export interface RecentAgentSessionsStorage {
 export const RECENT_AGENT_SESSIONS_STORAGE_KEY = "paseo:recent-agent-sessions";
 const RECENT_AGENT_SESSIONS_LIMIT = 20;
 
-const RecentAgentSessionSchema: z.ZodType<RecentAgentSession> = z.strictObject({
-  serverId: z.string().trim().min(1),
-  agentId: z.string().trim().min(1),
-});
+const ViewedAgentSessionSchema: z.ZodType<ViewedAgentSession> = z
+  .strictObject({
+    serverId: z.string().trim().min(1),
+    agentId: z.string().trim().min(1),
+    viewedAt: z.number().finite().optional(),
+  })
+  .transform((entry) => ({ ...entry, viewedAt: entry.viewedAt ?? null }));
 
-function parseStoredSessions(stored: string | null): RecentAgentSession[] {
+function parseStoredSessions(stored: string | null): ViewedAgentSession[] {
   if (!stored) {
     return [];
   }
@@ -28,7 +36,7 @@ function parseStoredSessions(stored: string | null): RecentAgentSession[] {
       return [];
     }
     return parsed.flatMap((entry) => {
-      const result = RecentAgentSessionSchema.safeParse(entry);
+      const result = ViewedAgentSessionSchema.safeParse(entry);
       return result.success ? [result.data] : [];
     });
   } catch {
@@ -40,8 +48,8 @@ function isSameSession(left: RecentAgentSession, right: RecentAgentSession): boo
   return left.serverId === right.serverId && left.agentId === right.agentId;
 }
 
-function mostRecentFirst(sessions: readonly RecentAgentSession[]): RecentAgentSession[] {
-  const unique: RecentAgentSession[] = [];
+function mostRecentFirst(sessions: readonly ViewedAgentSession[]): ViewedAgentSession[] {
+  const unique: ViewedAgentSession[] = [];
   for (const candidate of sessions) {
     if (!unique.some((existing) => isSameSession(existing, candidate))) {
       unique.push(candidate);
@@ -51,23 +59,37 @@ function mostRecentFirst(sessions: readonly RecentAgentSession[]): RecentAgentSe
 }
 
 export function createRecentAgentSessionsStore(storage: RecentAgentSessionsStorage) {
-  let sessions: readonly RecentAgentSession[] = [];
+  let sessions: readonly ViewedAgentSession[] = [];
   let hydration: Promise<void> | null = null;
   const listeners = new Set<() => void>();
 
-  function publish(next: readonly RecentAgentSession[]) {
+  function publish(next: readonly ViewedAgentSession[]) {
     sessions = next;
     for (const listener of listeners) {
       listener();
     }
   }
 
-  function remember(session: RecentAgentSession) {
-    if (sessions[0] && isSameSession(sessions[0], session)) {
+  function save(next: readonly ViewedAgentSession[]) {
+    publish(next);
+    void storage.write(JSON.stringify(sessions)).catch(() => {});
+  }
+
+  /** The session was opened at `viewedAt`: it moves to the front. */
+  function remember({ serverId, agentId }: RecentAgentSession, viewedAt: number) {
+    save(mostRecentFirst([{ serverId, agentId, viewedAt }, ...sessions]));
+  }
+
+  /** The session was still on screen at `viewedAt`, as when it is left: it keeps its place. */
+  function markSeen(session: RecentAgentSession, viewedAt: number) {
+    if (!sessions.some((existing) => isSameSession(existing, session))) {
       return;
     }
-    publish(mostRecentFirst([session, ...sessions]));
-    void storage.write(JSON.stringify(sessions)).catch(() => {});
+    save(
+      sessions.map((existing) =>
+        isSameSession(existing, session) ? { ...existing, viewedAt } : existing,
+      ),
+    );
   }
 
   async function load(): Promise<void> {
@@ -86,9 +108,10 @@ export function createRecentAgentSessionsStore(storage: RecentAgentSessionsStora
   }
 
   return {
-    getSessions: (): readonly RecentAgentSession[] => sessions,
+    getSessions: (): readonly ViewedAgentSession[] => sessions,
     hydrate,
     remember,
+    markSeen,
     subscribe(listener: () => void): () => void {
       listeners.add(listener);
       return () => {

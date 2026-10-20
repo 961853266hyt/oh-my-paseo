@@ -1,15 +1,24 @@
-import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
+import type { RecentAgentSession, ViewedAgentSession } from "@/stores/recent-agent-sessions/store";
+
+/** A session the switcher lists, with the time its row shows. */
+export interface AgentSwitcherEntry extends RecentAgentSession {
+  /**
+   * When the session was last viewed or last active, whichever the switcher is ordered by, in
+   * epoch ms. Null when ordered by last viewed and it has not been viewed on this client.
+   */
+  at: number | null;
+}
 
 export type AgentSwitcherState =
   | { status: "closed" }
-  | { status: "open"; sessions: readonly RecentAgentSession[]; index: number };
+  | { status: "open"; sessions: readonly AgentSwitcherEntry[]; index: number };
 
 export const CLOSED_AGENT_SWITCHER: AgentSwitcherState = { status: "closed" };
 
 interface AgentSwitcherStep {
   delta: 1 | -1;
   /** Sessions the user can switch to, most recently opened first. Read only when opening. */
-  sessions: readonly RecentAgentSession[];
+  sessions: readonly AgentSwitcherEntry[];
   current: RecentAgentSession | null;
 }
 
@@ -54,27 +63,37 @@ export interface OpenableAgentSession extends RecentAgentSession {
 /** The sessions the switcher lists, first to last, cut to the limit. */
 export function listAgentSwitcherSessions(input: {
   order: AgentSwitcherOrder;
-  recentlyViewed: readonly RecentAgentSession[];
+  recentlyViewed: readonly ViewedAgentSession[];
   sessions: readonly OpenableAgentSession[];
+  /** The session on screen, which is being viewed `now`. */
+  current: RecentAgentSession | null;
+  now: number;
   limit: number;
-}): RecentAgentSession[] {
-  const byActivity = [...input.sessions]
-    .sort((left, right) => right.lastActivityAt - left.lastActivityAt)
-    .map(({ serverId, agentId }) => ({ serverId, agentId }));
+}): AgentSwitcherEntry[] {
+  const byActivity = [...input.sessions].sort(
+    (left, right) => right.lastActivityAt - left.lastActivityAt,
+  );
   if (input.order === "lastActivity") {
-    return byActivity.slice(0, input.limit);
+    return byActivity
+      .slice(0, input.limit)
+      .map(({ serverId, agentId, lastActivityAt }) => ({ serverId, agentId, at: lastActivityAt }));
   }
+  const { current, now } = input;
+  const viewed = input.recentlyViewed
+    .filter((recent) => byActivity.some((candidate) => isSameSession(candidate, recent)))
+    .map(({ serverId, agentId, viewedAt }) => ({
+      serverId,
+      agentId,
+      at: current && isSameSession(current, { serverId, agentId }) ? now : viewedAt,
+    }));
   // Like Cmd+Tab, which lists every running app: sessions not viewed here follow the viewed ones,
   // so the switcher works on a client that has not opened any yet.
-  const viewed = input.recentlyViewed.filter((recent) =>
-    byActivity.some((candidate) => isSameSession(candidate, recent)),
-  );
-  const unviewed = byActivity.filter(
-    (candidate) => !viewed.some((recent) => isSameSession(recent, candidate)),
-  );
+  const unviewed = byActivity
+    .filter((candidate) => !viewed.some((recent) => isSameSession(recent, candidate)))
+    .map(({ serverId, agentId }) => ({ serverId, agentId, at: null }));
   return [...viewed, ...unviewed].slice(0, input.limit);
 }
 
-export function selectedAgentSession(state: AgentSwitcherState): RecentAgentSession | null {
+export function selectedAgentSession(state: AgentSwitcherState): AgentSwitcherEntry | null {
   return state.status === "open" ? (state.sessions[state.index] ?? null) : null;
 }

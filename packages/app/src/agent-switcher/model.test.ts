@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
 import {
   CLOSED_AGENT_SWITCHER,
   listAgentSwitcherSessions,
   selectAgentSwitcherIndex,
   selectedAgentSession,
   stepAgentSwitcher,
+  type AgentSwitcherEntry,
 } from "./model";
 
-function session(agentId: string): RecentAgentSession {
-  return { serverId: "srv_1", agentId };
+function session(agentId: string): AgentSwitcherEntry {
+  return { serverId: "srv_1", agentId, at: null };
 }
 
 const alpha = session("alpha");
@@ -119,21 +119,58 @@ describe("agent switcher", () => {
 describe("agent switcher list", () => {
   const delta = session("delta");
   const openable = [
-    { ...alpha, lastActivityAt: 300 },
-    { ...beta, lastActivityAt: 100 },
-    { ...gamma, lastActivityAt: 400 },
-    { ...delta, lastActivityAt: 200 },
+    { serverId: "srv_1", agentId: "alpha", lastActivityAt: 300 },
+    { serverId: "srv_1", agentId: "beta", lastActivityAt: 100 },
+    { serverId: "srv_1", agentId: "gamma", lastActivityAt: 400 },
+    { serverId: "srv_1", agentId: "delta", lastActivityAt: 200 },
   ];
+  const viewed = (agentId: string, viewedAt: number | null) => ({
+    serverId: "srv_1",
+    agentId,
+    viewedAt,
+  });
+  const NOW = 1000;
 
   it("lists viewed sessions first, newest view first, then the rest by activity", () => {
     const list = listAgentSwitcherSessions({
       order: "lastViewed",
-      recentlyViewed: [beta, session("archived"), alpha],
+      recentlyViewed: [viewed("beta", 900), viewed("archived", 800), viewed("alpha", 700)],
       sessions: openable,
+      current: null,
+      now: NOW,
       limit: 10,
     });
 
-    expect(list).toEqual([beta, alpha, gamma, delta]);
+    expect(list).toEqual([{ ...beta, at: 900 }, { ...alpha, at: 700 }, gamma, delta]);
+  });
+
+  it("shows the session on screen as viewed now", () => {
+    const list = listAgentSwitcherSessions({
+      order: "lastViewed",
+      recentlyViewed: [viewed("beta", 900), viewed("alpha", 700)],
+      sessions: openable,
+      current: beta,
+      now: NOW,
+      limit: 2,
+    });
+
+    expect(list).toEqual([
+      { ...beta, at: NOW },
+      { ...alpha, at: 700 },
+    ]);
+  });
+
+  it("shows no time for a session viewed before times were kept", () => {
+    const list = listAgentSwitcherSessions({
+      order: "lastViewed",
+      recentlyViewed: [viewed("alpha", null)],
+      sessions: openable,
+      current: null,
+      now: NOW,
+      limit: 1,
+    });
+
+    expect(list).toEqual([alpha]);
   });
 
   it("still lists sessions on a client that has not viewed any yet", () => {
@@ -141,21 +178,30 @@ describe("agent switcher list", () => {
       order: "lastViewed",
       recentlyViewed: [],
       sessions: openable,
+      current: null,
+      now: NOW,
       limit: 10,
     });
 
     expect(list).toEqual([gamma, alpha, delta, beta]);
   });
 
-  it("lists every session by its last activity, newest first, viewed or not", () => {
+  it("lists every session by its last activity, newest first, with that time", () => {
     const list = listAgentSwitcherSessions({
       order: "lastActivity",
-      recentlyViewed: [beta],
+      recentlyViewed: [viewed("beta", 900)],
       sessions: openable,
+      current: beta,
+      now: NOW,
       limit: 10,
     });
 
-    expect(list).toEqual([gamma, alpha, delta, beta]);
+    expect(list).toEqual([
+      { ...gamma, at: 400 },
+      { ...alpha, at: 300 },
+      { ...delta, at: 200 },
+      { ...beta, at: 100 },
+    ]);
   });
 
   it("keeps only as many sessions as the limit allows", () => {
@@ -164,16 +210,26 @@ describe("agent switcher list", () => {
         order: "lastActivity",
         recentlyViewed: [],
         sessions: openable,
+        current: null,
+        now: NOW,
         limit: 2,
       }),
-    ).toEqual([gamma, alpha]);
+    ).toEqual([
+      { ...gamma, at: 400 },
+      { ...alpha, at: 300 },
+    ]);
     expect(
       listAgentSwitcherSessions({
         order: "lastViewed",
-        recentlyViewed: [delta, beta, alpha],
+        recentlyViewed: [viewed("delta", 900), viewed("beta", 800), viewed("alpha", 700)],
         sessions: openable,
+        current: null,
+        now: NOW,
         limit: 2,
       }),
-    ).toEqual([delta, beta]);
+    ).toEqual([
+      { ...delta, at: 900 },
+      { ...beta, at: 800 },
+    ]);
   });
 });

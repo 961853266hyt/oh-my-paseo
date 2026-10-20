@@ -6,10 +6,10 @@ import { useAgentStatusDotColor } from "@/components/agent-status-dot";
 import { ProjectIconView, projectIconRadius } from "@/components/project-icon-view";
 import { PressHighlight } from "@/components/ui/press-highlight";
 import { useProjects } from "@/hooks/use-projects";
+import { useCompactTimeAgo } from "@/hooks/use-time-ago";
 import { createProjectIconTarget } from "@/projects/icon-target";
 import { useProjectIcons } from "@/projects/icons";
 import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
-import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
 import { useSessionStore } from "@/stores/session-store";
 import {
   projectDisplayNameFromProjectId,
@@ -21,6 +21,7 @@ import {
   chooseAgentSwitcherSession,
   highlightAgentSwitcherSession,
 } from "./switcher";
+import type { AgentSwitcherEntry } from "./model";
 
 // A quick press and release switches without the list ever showing, as with Cmd+Tab.
 const AGENT_SWITCHER_SHOW_DELAY_MS = 150;
@@ -46,11 +47,13 @@ interface AgentSwitcherRow {
   folderProject: AgentSwitcherProject | null;
   status: string | null;
   requiresAttention: boolean;
+  /** When it was last viewed or last active, by the switcher's order; null shows no time. */
+  at: number | null;
 }
 
-function buildRows(sessions: readonly RecentAgentSession[], untitled: string): AgentSwitcherRow[] {
+function buildRows(sessions: readonly AgentSwitcherEntry[], untitled: string): AgentSwitcherRow[] {
   const hosts = useSessionStore.getState().sessions;
-  return sessions.map(({ serverId, agentId }) => {
+  return sessions.map(({ serverId, agentId, at }) => {
     const session = hosts[serverId];
     const agent = session?.agents.get(agentId) ?? session?.agentDetails.get(agentId);
     const workspace = agent?.workspaceId ? session?.workspaces.get(agent.workspaceId) : undefined;
@@ -68,6 +71,7 @@ function buildRows(sessions: readonly RecentAgentSession[], untitled: string): A
         : null,
       status: agent?.status ?? null,
       requiresAttention: Boolean(agent?.requiresAttention),
+      at,
     };
   });
 }
@@ -113,7 +117,7 @@ export function AgentSwitcher() {
   const switcher = useKeyboardShortcutsStore((state) => state.agentSwitcher);
   const sessions = switcher.status === "open" ? switcher.sessions : null;
   const projectsByWorkspace = useWorkspaceProjects(sessions !== null);
-  const [shownSessions, setShownSessions] = useState<readonly RecentAgentSession[] | null>(null);
+  const [shownSessions, setShownSessions] = useState<readonly AgentSwitcherEntry[] | null>(null);
 
   useEffect(() => {
     if (!sessions) {
@@ -192,8 +196,23 @@ function AgentSwitcherRowItem({
             {row.subtitle}
           </Text>
         </View>
+        {row.at === null ? null : <AgentSwitcherTimestamp at={row.at} />}
       </PressHighlight>
     </View>
+  );
+}
+
+/**
+ * Its own component so the clock stops here, as with the sidebar's timestamps: a tick re-renders
+ * this one `<Text>`, not the row.
+ */
+function AgentSwitcherTimestamp({ at }: { at: number }) {
+  const date = useMemo(() => new Date(at), [at]);
+  const label = useCompactTimeAgo(date);
+  return (
+    <Text style={styles.timestamp} numberOfLines={1} testID="agent-switcher-timestamp">
+      {label}
+    </Text>
   );
 }
 
@@ -314,5 +333,10 @@ const styles = StyleSheet.create((theme) => ({
   textContent: { flex: 1, minWidth: 0 },
   title: { color: theme.colors.foreground, fontSize: theme.fontSize.base },
   subtitle: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+  timestamp: {
+    flexShrink: 0,
+    color: theme.colors.foregroundExtraMuted,
+    fontSize: theme.fontSize.sm,
+  },
   projectIconFallbackText: { fontSize: theme.fontSize.sm, fontWeight: theme.fontWeight.medium },
 }));
