@@ -1,0 +1,54 @@
+import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
+import { getRecentAgentSessions } from "@/stores/recent-agent-sessions";
+import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
+import { useSessionStore } from "@/stores/session-store";
+import { navigateToAgent } from "@/utils/navigate-to-agent";
+import { CLOSED_AGENT_SWITCHER, selectedAgentSession, stepAgentSwitcher } from "./model";
+
+function canOpen({ serverId, agentId }: RecentAgentSession): boolean {
+  const session = useSessionStore.getState().sessions[serverId];
+  const agent = session?.agents.get(agentId) ?? session?.agentDetails.get(agentId);
+  return agent !== undefined && !agent.archivedAt;
+}
+
+function getFocusedAgentSession(): RecentAgentSession | null {
+  for (const [serverId, session] of Object.entries(useSessionStore.getState().sessions)) {
+    if (session?.focusedAgentId) {
+      return { serverId, agentId: session.focusedAgentId };
+    }
+  }
+  return null;
+}
+
+/** Opens the switcher or moves its selection. Returns whether it is open afterwards. */
+export function stepAgentSwitcherFromKeyboard(delta: 1 | -1): boolean {
+  const store = useKeyboardShortcutsStore.getState();
+  const next = stepAgentSwitcher(store.agentSwitcher, {
+    delta,
+    sessions: getRecentAgentSessions().filter(canOpen),
+    current: getFocusedAgentSession(),
+  });
+  store.setAgentSwitcher(next);
+  return next.status === "open";
+}
+
+export function commitAgentSwitcher(): void {
+  const store = useKeyboardShortcutsStore.getState();
+  const selected = selectedAgentSession(store.agentSwitcher);
+  store.setAgentSwitcher(CLOSED_AGENT_SWITCHER);
+  if (selected) {
+    navigateToAgent(selected);
+  }
+}
+
+export function chooseAgentSwitcherSession(index: number): void {
+  const store = useKeyboardShortcutsStore.getState();
+  if (store.agentSwitcher.status === "open") {
+    store.setAgentSwitcher({ ...store.agentSwitcher, index });
+    commitAgentSwitcher();
+  }
+}
+
+export function cancelAgentSwitcher(): void {
+  useKeyboardShortcutsStore.getState().setAgentSwitcher(CLOSED_AGENT_SWITCHER);
+}

@@ -688,6 +688,38 @@ const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
     },
   },
 
+  // --- Recent agent sessions ---
+  // Cmd+Tab belongs to macOS and browsers keep Ctrl+Tab for their own tabs, so the web app
+  // switches with Alt+Tab, which macOS leaves free.
+  {
+    id: "agent-switch-recent-ctrl-tab-desktop",
+    action: "agent.switch.recent",
+    combo: "Ctrl+Tab",
+    when: { desktop: true },
+    payload: { type: "delta", delta: 1 },
+  },
+  {
+    id: "agent-switch-recent-ctrl-shift-tab-desktop",
+    action: "agent.switch.recent",
+    combo: "Ctrl+Shift+Tab",
+    when: { desktop: true },
+    payload: { type: "delta", delta: -1 },
+  },
+  {
+    id: "agent-switch-recent-alt-tab-web",
+    action: "agent.switch.recent",
+    combo: "Alt+Tab",
+    when: { desktop: false },
+    payload: { type: "delta", delta: 1 },
+  },
+  {
+    id: "agent-switch-recent-alt-shift-tab-web",
+    action: "agent.switch.recent",
+    combo: "Alt+Shift+Tab",
+    when: { desktop: false },
+    payload: { type: "delta", delta: -1 },
+  },
+
   // --- Tab relative navigation ---
   {
     id: "workspace-tab-navigate-relative-alt-shift-left",
