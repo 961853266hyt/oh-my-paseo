@@ -1,21 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
-import { Modal, Text, View } from "react-native";
+import { Modal, Text, View, type ViewStyle } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
-import { useAgentStatusDotColor } from "@/components/agent-status-dot";
 import { ProjectIconView, projectIconRadius } from "@/components/project-icon-view";
 import { PressHighlight } from "@/components/ui/press-highlight";
 import { useProjects } from "@/hooks/use-projects";
+import { getStatusBucketLabel } from "@/hooks/sidebar-status-view-model";
 import { useCompactTimeAgo } from "@/hooks/use-time-ago";
 import { createProjectIconTarget } from "@/projects/icon-target";
 import { useProjectIcons } from "@/projects/icons";
 import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
-import { useSessionStore } from "@/stores/session-store";
+import { useSessionStore, type Agent } from "@/stores/session-store";
 import {
   projectDisplayNameFromProjectId,
   projectIconPlaceholderLabelFromDisplayName,
 } from "@/utils/project-display-name";
 import { shortenPath } from "@/utils/shorten-path";
+import { deriveSidebarStateBucket, type SidebarStateBucket } from "@/utils/sidebar-agent-state";
+import { getStatusDotColor } from "@/utils/status-dot-color";
+import { workspaceAgentStatus } from "@/utils/workspace-agent-activity";
 import {
   cancelAgentSwitcher,
   chooseAgentSwitcherSession,
@@ -45,21 +49,32 @@ interface AgentSwitcherRow {
   workspaceKey: string | null;
   /** Stands in for the project of a session outside any workspace: a lettered square for its folder. */
   folderProject: AgentSwitcherProject | null;
-  status: string | null;
-  requiresAttention: boolean;
+  statusBucket: SidebarStateBucket | null;
+  statusLabel: string | null;
   /** When it was last viewed or last active, by the switcher's order; null shows no time. */
   at: number | null;
 }
 
-function buildRows(sessions: readonly AgentSwitcherEntry[], untitled: string): AgentSwitcherRow[] {
+/** The state the sidebar shows the session in, permission requests included. */
+function agentStatusBucket(agent: Agent): SidebarStateBucket {
+  return deriveSidebarStateBucket({
+    status: workspaceAgentStatus(agent),
+    pendingPermissionCount: agent.pendingPermissions.length,
+    requiresAttention: Boolean(agent.requiresAttention),
+    attentionReason: agent.attentionReason ?? null,
+  });
+}
+
+function buildRows(sessions: readonly AgentSwitcherEntry[], t: TFunction): AgentSwitcherRow[] {
   const hosts = useSessionStore.getState().sessions;
   return sessions.map(({ serverId, agentId, at }) => {
     const session = hosts[serverId];
     const agent = session?.agents.get(agentId) ?? session?.agentDetails.get(agentId);
     const workspace = agent?.workspaceId ? session?.workspaces.get(agent.workspaceId) : undefined;
+    const statusBucket = agent ? agentStatusBucket(agent) : null;
     return {
       key: `${serverId}:${agentId}`,
-      title: agent?.title || untitled,
+      title: agent?.title || t("shell.commandCenter.newAgent"),
       subtitle: (workspace?.title ?? workspace?.name) || (agent ? shortenPath(agent.cwd) : ""),
       workspaceKey: workspace ? `${serverId}:${workspace.id}` : null,
       folderProject: agent
@@ -69,8 +84,8 @@ function buildRows(sessions: readonly AgentSwitcherEntry[], untitled: string): A
             iconDataUri: null,
           }
         : null,
-      status: agent?.status ?? null,
-      requiresAttention: Boolean(agent?.requiresAttention),
+      statusBucket,
+      statusLabel: statusBucket ? getStatusBucketLabel(statusBucket, t) : null,
       at,
     };
   });
@@ -128,10 +143,7 @@ export function AgentSwitcher() {
   }, [sessions]);
 
   // A snapshot of the sessions it opened with, so the list does not follow the hot session store.
-  const rows = useMemo(
-    () => (sessions ? buildRows(sessions, t("shell.commandCenter.newAgent")) : []),
-    [sessions, t],
-  );
+  const rows = useMemo(() => (sessions ? buildRows(sessions, t) : []), [sessions, t]);
 
   if (switcher.status !== "open" || shownSessions !== switcher.sessions) {
     return null;
@@ -192,9 +204,17 @@ function AgentSwitcherRowItem({
           <Text style={styles.title} numberOfLines={1}>
             {row.title}
           </Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {row.subtitle}
-          </Text>
+          <View style={styles.subtitleLine}>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {row.subtitle}
+            </Text>
+            {/* Its own text, so a long workspace name truncates before the status does. */}
+            {row.statusLabel ? (
+              <Text style={styles.status} numberOfLines={1} testID="agent-switcher-status-label">
+                {row.subtitle ? `\u00a0· ${row.statusLabel}` : row.statusLabel}
+              </Text>
+            ) : null}
+          </View>
         </View>
         {row.at === null ? null : <AgentSwitcherTimestamp at={row.at} />}
       </PressHighlight>
@@ -219,7 +239,7 @@ function AgentSwitcherTimestamp({ at }: { at: number }) {
 /**
  * The project icon the sidebar shows the session's workspace with, its image or a lettered square,
  * leading the row as an app's icon leads Cmd+Tab. As on the sidebar's project icon, the session's
- * status hangs off its bottom-right corner, and an idle session shows none.
+ * status hangs off its bottom-right corner in color, and a finished session shows none.
  */
 function ProjectIconWithStatus({
   project,
@@ -230,16 +250,10 @@ function ProjectIconWithStatus({
   row: AgentSwitcherRow;
   selected: boolean;
 }) {
-  const dotColor = useAgentStatusDotColor({
-    status: row.status,
-    requiresAttention: row.requiresAttention,
-  });
+  const dotColorStyle = row.statusBucket ? getStatusDotColorStyle(row.statusBucket) : null;
   const badgeStyle = useMemo(
-    () => [
-      selected ? styles.statusBadgeOnSelected : styles.statusBadge,
-      { backgroundColor: dotColor ?? undefined },
-    ],
-    [dotColor, selected],
+    () => [selected ? styles.statusBadgeOnSelected : styles.statusBadge, dotColorStyle],
+    [dotColorStyle, selected],
   );
   const initial = project
     ? projectIconPlaceholderLabelFromDisplayName(project.name).charAt(0).toUpperCase()
@@ -260,9 +274,18 @@ function ProjectIconWithStatus({
           <View style={styles.iconPlaceholder} />
         )}
       </View>
-      {dotColor ? <View style={badgeStyle} testID="agent-switcher-status" /> : null}
+      {dotColorStyle ? <View style={badgeStyle} testID="agent-switcher-status" /> : null}
     </View>
   );
+}
+
+/** The badge's fill for each state the sidebar colors; a finished session gets no badge. */
+function getStatusDotColorStyle(bucket: SidebarStateBucket): ViewStyle | null {
+  if (bucket === "needs_input") return styles.statusDotNeedsInput;
+  if (bucket === "failed") return styles.statusDotFailed;
+  if (bucket === "running") return styles.statusDotRunning;
+  if (bucket === "attention") return styles.statusDotAttention;
+  return null;
 }
 
 const styles = StyleSheet.create((theme) => ({
@@ -320,6 +343,17 @@ const styles = StyleSheet.create((theme) => ({
     borderWidth: STATUS_DOT_RING,
     borderColor: theme.colors.surface0,
   },
+  // From the one bucket-to-color map, so these dots cannot drift from the sidebar's.
+  statusDotNeedsInput: {
+    backgroundColor: getStatusDotColor({ theme, bucket: "needs_input" }) ?? undefined,
+  },
+  statusDotFailed: { backgroundColor: getStatusDotColor({ theme, bucket: "failed" }) ?? undefined },
+  statusDotRunning: {
+    backgroundColor: getStatusDotColor({ theme, bucket: "running" }) ?? undefined,
+  },
+  statusDotAttention: {
+    backgroundColor: getStatusDotColor({ theme, bucket: "attention" }) ?? undefined,
+  },
   statusBadgeOnSelected: {
     position: "absolute",
     right: -STATUS_DOT_RING - 1,
@@ -332,7 +366,14 @@ const styles = StyleSheet.create((theme) => ({
   },
   textContent: { flex: 1, minWidth: 0 },
   title: { color: theme.colors.foreground, fontSize: theme.fontSize.base },
-  subtitle: { color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
+  subtitleLine: { flexDirection: "row", minWidth: 0 },
+  subtitle: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: theme.colors.foregroundMuted,
+    fontSize: theme.fontSize.sm,
+  },
+  status: { flexShrink: 0, color: theme.colors.foregroundMuted, fontSize: theme.fontSize.sm },
   timestamp: {
     flexShrink: 0,
     color: theme.colors.foregroundExtraMuted,
