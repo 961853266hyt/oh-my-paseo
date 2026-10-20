@@ -3,7 +3,12 @@ import { getRecentAgentSessions } from "@/stores/recent-agent-sessions";
 import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
 import { useSessionStore } from "@/stores/session-store";
 import { navigateToAgent } from "@/utils/navigate-to-agent";
-import { CLOSED_AGENT_SWITCHER, selectedAgentSession, stepAgentSwitcher } from "./model";
+import {
+  CLOSED_AGENT_SWITCHER,
+  selectAgentSwitcherIndex,
+  selectedAgentSession,
+  stepAgentSwitcher,
+} from "./model";
 
 function canOpen({ serverId, agentId }: RecentAgentSession): boolean {
   const session = useSessionStore.getState().sessions[serverId];
@@ -41,12 +46,17 @@ export function commitAgentSwitcher(): void {
   }
 }
 
-export function chooseAgentSwitcherSession(index: number): void {
+export function highlightAgentSwitcherSession(index: number): void {
   const store = useKeyboardShortcutsStore.getState();
-  if (store.agentSwitcher.status === "open") {
-    store.setAgentSwitcher({ ...store.agentSwitcher, index });
-    commitAgentSwitcher();
+  const next = selectAgentSwitcherIndex(store.agentSwitcher, index);
+  if (next !== store.agentSwitcher) {
+    store.setAgentSwitcher(next);
   }
+}
+
+export function chooseAgentSwitcherSession(index: number): void {
+  highlightAgentSwitcherSession(index);
+  commitAgentSwitcher();
 }
 
 export function cancelAgentSwitcher(): void {

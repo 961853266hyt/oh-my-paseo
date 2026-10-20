@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
-import { CLOSED_AGENT_SWITCHER, selectedAgentSession, stepAgentSwitcher } from "./model";
+import {
+  CLOSED_AGENT_SWITCHER,
+  selectAgentSwitcherIndex,
+  selectedAgentSession,
+  stepAgentSwitcher,
+} from "./model";
 
 function session(agentId: string): RecentAgentSession {
   return { serverId: "srv_1", agentId };
@@ -81,6 +86,28 @@ describe("agent switcher", () => {
     expect(
       stepAgentSwitcher(CLOSED_AGENT_SWITCHER, { delta: 1, sessions: [], current: null }),
     ).toEqual(CLOSED_AGENT_SWITCHER);
+  });
+
+  it("selects the session the pointer moves onto", () => {
+    const opened = stepAgentSwitcher(CLOSED_AGENT_SWITCHER, {
+      delta: 1,
+      sessions: [alpha, beta, gamma],
+      current: alpha,
+    });
+
+    expect(selectedAgentSession(selectAgentSwitcherIndex(opened, 2))).toEqual(gamma);
+  });
+
+  it("keeps the same state when the pointer selects nothing new", () => {
+    const opened = stepAgentSwitcher(CLOSED_AGENT_SWITCHER, {
+      delta: 1,
+      sessions: [alpha, beta, gamma],
+      current: alpha,
+    });
+
+    expect(selectAgentSwitcherIndex(opened, 1)).toBe(opened);
+    expect(selectAgentSwitcherIndex(opened, 3)).toBe(opened);
+    expect(selectAgentSwitcherIndex(CLOSED_AGENT_SWITCHER, 0)).toBe(CLOSED_AGENT_SWITCHER);
   });
 
   it("selects nothing while closed", () => {

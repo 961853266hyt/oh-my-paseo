@@ -35,6 +35,16 @@ export function stepAgentSwitcher(
   return { status: "open", sessions, index: delta > 0 ? firstIndex : sessions.length - 1 };
 }
 
+export function selectAgentSwitcherIndex(
+  state: AgentSwitcherState,
+  index: number,
+): AgentSwitcherState {
+  if (state.status !== "open" || index === state.index || !state.sessions[index]) {
+    return state;
+  }
+  return { ...state, index };
+}
+
 export function selectedAgentSession(state: AgentSwitcherState): RecentAgentSession | null {
   return state.status === "open" ? (state.sessions[state.index] ?? null) : null;
 }

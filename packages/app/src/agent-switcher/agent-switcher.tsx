@@ -8,7 +8,11 @@ import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
 import type { RecentAgentSession } from "@/stores/recent-agent-sessions/store";
 import { useSessionStore } from "@/stores/session-store";
 import { shortenPath } from "@/utils/shorten-path";
-import { cancelAgentSwitcher, chooseAgentSwitcherSession } from "./switcher";
+import {
+  cancelAgentSwitcher,
+  chooseAgentSwitcherSession,
+  highlightAgentSwitcherSession,
+} from "./switcher";
 
 // A quick press and release switches without the list ever showing, as with Cmd+Tab.
 const AGENT_SWITCHER_SHOW_DELAY_MS = 150;
@@ -91,30 +95,37 @@ function AgentSwitcherRowItem({
   selected: boolean;
 }) {
   const choose = useCallback(() => chooseAgentSwitcherSession(index), [index]);
+  // Like Cmd+Tab, moving the pointer over a row selects it and releasing the modifier opens it.
+  // Movement, not entry: a list that opens under a resting pointer keeps the keyboard's choice.
+  const highlight = useCallback(() => highlightAgentSwitcherSession(index), [index]);
   return (
-    <PressHighlight
-      testID={`agent-switcher-row-${row.key}`}
-      accessibilityRole="button"
-      accessibilityState={selected ? SELECTED_STATE : UNSELECTED_STATE}
-      onPress={choose}
-      style={selected ? styles.selectedRow : styles.row}
-    >
-      <View style={styles.iconSlot}>
-        <AgentStatusDot
-          status={row.status}
-          requiresAttention={row.requiresAttention}
-          showInactive
-        />
-      </View>
-      <View style={styles.textContent}>
-        <Text style={styles.title} numberOfLines={1}>
-          {row.title}
-        </Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {row.subtitle}
-        </Text>
-      </View>
-    </PressHighlight>
+    // react-native-web drops onPress for Alt-clicks and macOS turns Ctrl-click into a right click,
+    // so a click made while the shortcut's modifier is still held only reaches pointerdown.
+    <View style={styles.rowHoverTarget} onPointerMove={highlight} onPointerDown={choose}>
+      <PressHighlight
+        testID={`agent-switcher-row-${row.key}`}
+        accessibilityRole="button"
+        accessibilityState={selected ? SELECTED_STATE : UNSELECTED_STATE}
+        onPress={choose}
+        style={selected ? styles.selectedRow : styles.row}
+      >
+        <View style={styles.iconSlot}>
+          <AgentStatusDot
+            status={row.status}
+            requiresAttention={row.requiresAttention}
+            showInactive
+          />
+        </View>
+        <View style={styles.textContent}>
+          <Text style={styles.title} numberOfLines={1}>
+            {row.title}
+          </Text>
+          <Text style={styles.subtitle} numberOfLines={1}>
+            {row.subtitle}
+          </Text>
+        </View>
+      </PressHighlight>
+    </View>
   );
 }
 
@@ -138,6 +149,7 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.surface0,
     ...theme.shadow.lg,
   },
+  rowHoverTarget: { position: "relative" },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
