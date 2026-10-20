@@ -59,6 +59,22 @@ export function chooseAgentSwitcherSession(index: number): void {
   commitAgentSwitcher();
 }
 
+/** Keys the open switcher takes over: the arrows move the selection and Escape cancels. */
+export function handleAgentSwitcherKey(key: string): boolean {
+  if (useKeyboardShortcutsStore.getState().agentSwitcher.status !== "open") {
+    return false;
+  }
+  if (key === "Escape") {
+    cancelAgentSwitcher();
+    return true;
+  }
+  if (key === "ArrowDown" || key === "ArrowUp") {
+    stepAgentSwitcherFromKeyboard(key === "ArrowDown" ? 1 : -1);
+    return true;
+  }
+  return false;
+}
+
 export function cancelAgentSwitcher(): void {
   useKeyboardShortcutsStore.getState().setAgentSwitcher(CLOSED_AGENT_SWITCHER);
 }

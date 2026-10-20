@@ -70,7 +70,9 @@ export function AgentSwitcher() {
     <Modal visible transparent animationType="none" onRequestClose={cancelAgentSwitcher}>
       <View style={styles.overlay}>
         <View style={styles.backdrop} />
-        <View style={styles.panel} testID="agent-switcher">
+        {/* The modal focuses its first focusable descendant. Without a focusable panel that is the
+            first row, and a keyboard-opened list draws the focus ring around it. */}
+        <View style={styles.panel} testID="agent-switcher" focusable>
           {rows.map((row, index) => (
             <AgentSwitcherRowItem
               key={row.key}
@@ -147,6 +149,7 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.borderRadius.lg,
     overflow: "hidden",
     backgroundColor: theme.colors.surface0,
+    outlineWidth: 0,
     ...theme.shadow.lg,
   },
   rowHoverTarget: { position: "relative" },

@@ -44,6 +44,7 @@ import { dispatchTopWebOverlayKeyDown, keyBelongsToDomPopover } from "@/lib/over
 import {
   cancelAgentSwitcher,
   commitAgentSwitcher,
+  handleAgentSwitcherKey,
   stepAgentSwitcherFromKeyboard,
 } from "@/agent-switcher/switcher";
 
@@ -338,13 +339,9 @@ export function useKeyboardShortcuts({
       return;
     }
 
-    if (
-      event.key === "Escape" &&
-      useKeyboardShortcutsStore.getState().agentSwitcher.status === "open"
-    ) {
+    if (handleAgentSwitcherKey(event.key ?? "")) {
       event.preventDefault();
       event.stopPropagation();
-      cancelAgentSwitcher();
       return;
     }
 
