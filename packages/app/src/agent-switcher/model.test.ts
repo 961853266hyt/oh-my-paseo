@@ -125,7 +125,7 @@ describe("agent switcher list", () => {
     { ...delta, lastActivityAt: 200 },
   ];
 
-  it("lists sessions in the order they were last viewed, leaving out ones that cannot open", () => {
+  it("lists viewed sessions first, newest view first, then the rest by activity", () => {
     const list = listAgentSwitcherSessions({
       order: "lastViewed",
       recentlyViewed: [beta, session("archived"), alpha],
@@ -133,7 +133,18 @@ describe("agent switcher list", () => {
       limit: 10,
     });
 
-    expect(list).toEqual([beta, alpha]);
+    expect(list).toEqual([beta, alpha, gamma, delta]);
+  });
+
+  it("still lists sessions on a client that has not viewed any yet", () => {
+    const list = listAgentSwitcherSessions({
+      order: "lastViewed",
+      recentlyViewed: [],
+      sessions: openable,
+      limit: 10,
+    });
+
+    expect(list).toEqual([gamma, alpha, delta, beta]);
   });
 
   it("lists every session by its last activity, newest first, viewed or not", () => {

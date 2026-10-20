@@ -58,15 +58,21 @@ export function listAgentSwitcherSessions(input: {
   sessions: readonly OpenableAgentSession[];
   limit: number;
 }): RecentAgentSession[] {
-  const ordered =
-    input.order === "lastViewed"
-      ? input.recentlyViewed.filter((viewed) =>
-          input.sessions.some((candidate) => isSameSession(candidate, viewed)),
-        )
-      : [...input.sessions]
-          .sort((left, right) => right.lastActivityAt - left.lastActivityAt)
-          .map(({ serverId, agentId }) => ({ serverId, agentId }));
-  return ordered.slice(0, input.limit);
+  const byActivity = [...input.sessions]
+    .sort((left, right) => right.lastActivityAt - left.lastActivityAt)
+    .map(({ serverId, agentId }) => ({ serverId, agentId }));
+  if (input.order === "lastActivity") {
+    return byActivity.slice(0, input.limit);
+  }
+  // Like Cmd+Tab, which lists every running app: sessions not viewed here follow the viewed ones,
+  // so the switcher works on a client that has not opened any yet.
+  const viewed = input.recentlyViewed.filter((recent) =>
+    byActivity.some((candidate) => isSameSession(candidate, recent)),
+  );
+  const unviewed = byActivity.filter(
+    (candidate) => !viewed.some((recent) => isSameSession(recent, candidate)),
+  );
+  return [...viewed, ...unviewed].slice(0, input.limit);
 }
 
 export function selectedAgentSession(state: AgentSwitcherState): RecentAgentSession | null {
