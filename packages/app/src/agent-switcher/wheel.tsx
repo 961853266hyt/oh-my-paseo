@@ -204,12 +204,9 @@ const styles = StyleSheet.create((theme) => {
     }) as const;
   return {
     overlay: { flex: 1, justifyContent: "center", alignItems: "center" },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(0, 0, 0, 0.32)",
-      // Blurring the app behind keeps the eye on the wheel.
-      ...(isWeb ? { backdropFilter: "blur(7px)" } : {}),
-    },
+    // Darker than the list's backdrop to keep the eye on the wheel. Not blurred: a full-screen
+    // backdrop blur over a streaming chat is redrawn every frame and froze the page in testing.
+    backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0, 0, 0, 0.42)" },
     // The wheel is a card the rows turn inside; the stacks float free over the backdrop.
     stageWheel: {
       width: WHEEL_WIDTH,
