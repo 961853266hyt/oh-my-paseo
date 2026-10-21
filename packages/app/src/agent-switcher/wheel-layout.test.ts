@@ -28,14 +28,22 @@ describe("wheel row layout", () => {
   });
 
   it("moves rows away from the selection and blurs and fades them more with distance", () => {
+    const fade = (layout: ReturnType<typeof wheelRowLayout>) => layout.opacity * layout.brightness;
     for (const style of ["wheel", "focus", "depth"] as const) {
       const near = wheelRowLayout(style, 1);
       const far = wheelRowLayout(style, 2);
       expect(near.translateY).toBeGreaterThan(0);
       expect(far.translateY).toBeGreaterThan(near.translateY);
       expect(far.blur).toBeGreaterThan(near.blur);
-      expect(far.opacity).toBeLessThan(near.opacity);
+      expect(fade(far)).toBeLessThan(fade(near));
       expect(wheelRowLayout(style, -1).translateY).toBe(-near.translateY);
+    }
+  });
+
+  it("keeps the stacks' cards opaque, so the app behind does not show through them", () => {
+    for (const style of ["focus", "depth"] as const) {
+      expect(wheelRowLayout(style, 1).opacity).toBe(1);
+      expect(wheelRowLayout(style, 2).opacity).toBe(1);
     }
   });
 

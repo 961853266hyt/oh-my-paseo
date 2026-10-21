@@ -40,22 +40,24 @@ interface WheelSteps {
 const WHEEL_ROW_ANGLE = 21;
 const WHEEL_RADIUS = 156;
 
+// The stacks' cards float over the app, so they stay opaque and recede by dimming into the
+// backdrop instead: a see-through card shows the app behind it, sharp, through its text.
 const STEPS: Record<Exclude<AgentSwitcherWheelStyle, "wheel">, WheelSteps> = {
   // A flat stack: neighbours step down in size, focus and light.
   focus: {
     translateY: [0, 84, 150, 204],
     scale: [1, 0.86, 0.74, 0.64],
     blur: [0, 1.6, 3.6, 6],
-    opacity: [1, 0.78, 0.46, 0.2],
-    brightness: [1, 1, 1, 1],
+    opacity: [1, 1, 1, 1],
+    brightness: [1, 0.86, 0.72, 0.6],
   },
   // Cards tucked behind the selection, above and below it.
   depth: {
     translateY: [0, 52, 94, 126],
     scale: [1, 0.9, 0.8, 0.72],
     blur: [0, 2, 4.5, 7],
-    opacity: [1, 0.85, 0.55, 0.25],
-    brightness: [1, 0.97, 0.93, 0.9],
+    opacity: [1, 1, 1, 1],
+    brightness: [1, 0.88, 0.76, 0.66],
   },
 };
 
