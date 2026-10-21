@@ -1,7 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { View } from "react-native";
 import { useTranslation } from "react-i18next";
-import type { AgentSwitcherOrder } from "@/agent-switcher/model";
+import {
+  AGENT_SWITCHER_STYLES,
+  type AgentSwitcherOrder,
+  type AgentSwitcherStyle,
+} from "@/agent-switcher/model";
 import { SettingsCard, SettingsSection, SettingsSelect } from "@/components/settings";
 import { useAppSettings } from "@/hooks/use-settings";
 import {
@@ -32,6 +36,20 @@ export function SessionSwitcherSection() {
     [t],
   );
 
+  const styleOptions = useMemo(
+    () =>
+      AGENT_SWITCHER_STYLES.map((value) => ({
+        value,
+        label: t(`settings.sessionSwitcher.style.options.${value}`),
+      })),
+    [t],
+  );
+
+  const changeStyle = useCallback(
+    (style: AgentSwitcherStyle) =>
+      void updateSettings((current) => ({ agentSwitcher: { ...current.agentSwitcher, style } })),
+    [updateSettings],
+  );
   const changeOrder = useCallback(
     (order: AgentSwitcherOrder) =>
       void updateSettings((current) => ({ agentSwitcher: { ...current.agentSwitcher, order } })),
@@ -52,6 +70,13 @@ export function SessionSwitcherSection() {
         info={t("settings.sessionSwitcher.info")}
       >
         <SettingsCard>
+          <SettingsSelect
+            label={t("settings.sessionSwitcher.style.label")}
+            hint={t("settings.sessionSwitcher.style.description")}
+            value={settings.agentSwitcher.style}
+            options={styleOptions}
+            onValueChange={changeStyle}
+          />
           <SettingsSelect
             label={t("settings.sessionSwitcher.order.label")}
             hint={t("settings.sessionSwitcher.order.description")}

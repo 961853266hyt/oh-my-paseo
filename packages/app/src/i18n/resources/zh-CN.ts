@@ -2123,6 +2123,16 @@ export const zhCN: TranslationResources = {
         label: "显示数量",
         description: "切换器最多列出的会话数，范围 2 到 15。",
       },
+      style: {
+        label: "样式",
+        description: "切换器打开时的外观。",
+        options: {
+          list: "列表",
+          wheel: "滚轮",
+          focus: "聚焦堆叠",
+          depth: "景深堆叠",
+        },
+      },
     },
     sections: {
       general: "通用",

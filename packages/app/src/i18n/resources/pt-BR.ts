@@ -2178,6 +2178,16 @@ export const ptBR: TranslationResources = {
         label: "Sessões exibidas",
         description: "Número máximo de sessões na lista, de 2 a 15.",
       },
+      style: {
+        label: "Estilo",
+        description: "Como o seletor aparece ao abrir.",
+        options: {
+          list: "Lista",
+          wheel: "Roda",
+          focus: "Pilha em foco",
+          depth: "Pilha em profundidade",
+        },
+      },
     },
     sections: {
       general: "Geral",

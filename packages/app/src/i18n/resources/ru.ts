@@ -2178,6 +2178,16 @@ export const ru: TranslationResources = {
         label: "Показывать сессий",
         description: "Максимальное число сессий в списке — от 2 до 15.",
       },
+      style: {
+        label: "Стиль",
+        description: "Как выглядит переключатель при открытии.",
+        options: {
+          list: "Список",
+          wheel: "Колесо",
+          focus: "Стопка с фокусом",
+          depth: "Стопка с глубиной",
+        },
+      },
     },
     sections: {
       general: "Основные",

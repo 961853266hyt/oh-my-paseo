@@ -2181,6 +2181,16 @@ export const ar: TranslationResources = {
         label: "عدد الجلسات المعروضة",
         description: "الحد الأقصى لعدد الجلسات في القائمة، من 2 إلى 15.",
       },
+      style: {
+        label: "النمط",
+        description: "شكل المبدّل عند فتحه.",
+        options: {
+          list: "قائمة",
+          wheel: "عجلة",
+          focus: "مكدّس التركيز",
+          depth: "مكدّس العمق",
+        },
+      },
     },
     sections: {
       general: "عام",

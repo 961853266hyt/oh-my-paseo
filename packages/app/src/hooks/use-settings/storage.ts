@@ -2,7 +2,11 @@ import { isSyntaxThemeId, type SyntaxThemeId } from "@getpaseo/highlight";
 import type { ActiveTurnBehavior } from "@getpaseo/protocol/messages";
 import type { QueryClient } from "@tanstack/react-query";
 import type { DesktopSettings } from "@/desktop/settings/desktop-settings";
-import type { AgentSwitcherOrder } from "@/agent-switcher/model";
+import {
+  AGENT_SWITCHER_STYLES,
+  type AgentSwitcherOrder,
+  type AgentSwitcherStyle,
+} from "@/agent-switcher/model";
 import type { AppLanguage } from "@/i18n/locales";
 import type { SidebarNavPreference } from "@/sidebar-nav/model";
 import {
@@ -117,6 +121,8 @@ export interface AgentSwitcherPreferences {
   order: AgentSwitcherOrder;
   /** How many sessions the switcher lists at most. */
   maxSessions: number;
+  /** How the switcher draws its list. */
+  style: AgentSwitcherStyle;
 }
 
 export const MIN_AGENT_SWITCHER_SESSIONS = 2;
@@ -124,6 +130,7 @@ export const MAX_AGENT_SWITCHER_SESSIONS = 15;
 export const DEFAULT_AGENT_SWITCHER_PREFERENCES: AgentSwitcherPreferences = {
   order: "lastViewed",
   maxSessions: 10,
+  style: "list",
 };
 
 export type AppSettingsUpdate =
@@ -310,6 +317,7 @@ const StoredAppSettingsSchema = z
         maxSessions: clampedNumber(MIN_AGENT_SWITCHER_SESSIONS, MAX_AGENT_SWITCHER_SESSIONS).catch(
           DEFAULT_AGENT_SWITCHER_PREFERENCES.maxSessions,
         ),
+        style: z.enum(AGENT_SWITCHER_STYLES).catch(DEFAULT_AGENT_SWITCHER_PREFERENCES.style),
       })
       .catch(DEFAULT_AGENT_SWITCHER_PREFERENCES),
     // COMPAT(explorerSidebarRouting): replaced by source-specific side-pane preferences in v0.6.

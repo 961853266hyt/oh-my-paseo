@@ -56,6 +56,15 @@ export function selectAgentSwitcherIndex(
 
 export type AgentSwitcherOrder = "lastViewed" | "lastActivity";
 
+/** How the switcher draws its list: the original list, or one of the centered wheels. */
+export type AgentSwitcherStyle = "list" | "wheel" | "focus" | "depth";
+export const AGENT_SWITCHER_STYLES: readonly AgentSwitcherStyle[] = [
+  "list",
+  "wheel",
+  "focus",
+  "depth",
+];
+
 export interface OpenableAgentSession extends RecentAgentSession {
   lastActivityAt: number;
 }

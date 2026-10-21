@@ -2166,6 +2166,16 @@ export const ja: TranslationResources = {
         label: "表示件数",
         description: "切り替え画面に表示するセッションの最大数（2〜15）。",
       },
+      style: {
+        label: "スタイル",
+        description: "スイッチャーを開いたときの見た目です。",
+        options: {
+          list: "リスト",
+          wheel: "ホイール",
+          focus: "フォーカススタック",
+          depth: "奥行きスタック",
+        },
+      },
     },
     sections: {
       general: "一般",

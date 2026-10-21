@@ -2155,6 +2155,16 @@ export const ko: TranslationResources = {
         label: "표시 개수",
         description: "전환기에 표시할 최대 세션 수입니다(2~15).",
       },
+      style: {
+        label: "스타일",
+        description: "전환기를 열었을 때의 모양입니다.",
+        options: {
+          list: "목록",
+          wheel: "휠",
+          focus: "포커스 스택",
+          depth: "깊이 스택",
+        },
+      },
     },
     sections: {
       general: "일반",

@@ -2170,6 +2170,16 @@ export const en = {
         label: "Sessions shown",
         description: "The most sessions the switcher lists, from 2 to 15.",
       },
+      style: {
+        label: "Style",
+        description: "How the switcher looks when it opens.",
+        options: {
+          list: "List",
+          wheel: "Wheel",
+          focus: "Focus stack",
+          depth: "Depth stack",
+        },
+      },
     },
     sections: {
       general: "General",

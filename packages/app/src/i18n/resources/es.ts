@@ -2193,6 +2193,16 @@ export const es: TranslationResources = {
         label: "Sesiones mostradas",
         description: "Número máximo de sesiones en la lista, de 2 a 15.",
       },
+      style: {
+        label: "Estilo",
+        description: "Cómo se ve el selector al abrirse.",
+        options: {
+          list: "Lista",
+          wheel: "Rueda",
+          focus: "Pila enfocada",
+          depth: "Pila con profundidad",
+        },
+      },
     },
     sections: {
       general: "General",
