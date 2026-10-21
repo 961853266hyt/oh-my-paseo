@@ -3,11 +3,18 @@ import { useTranslation } from "react-i18next";
 import { Modal, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { PressHighlight } from "@/components/ui/press-highlight";
+import { isWeb } from "@/constants/platform";
 import { useAppSettings } from "@/hooks/use-settings";
+import {
+  OverlayLayerProvider,
+  useGlobalWebOverlayLayer,
+  useWebOverlayRegistration,
+} from "@/lib/overlay-root";
 import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
 import {
   cancelAgentSwitcher,
   chooseAgentSwitcherSession,
+  handleAgentSwitcherKey,
   highlightAgentSwitcherSession,
 } from "./switcher";
 import type { AgentSwitcherEntry } from "./model";
@@ -47,37 +54,59 @@ export function AgentSwitcher() {
   // A snapshot of the sessions it opened with, so the list does not follow the hot session store.
   const rows = useMemo(() => (sessions ? buildAgentSwitcherRows(sessions, t) : []), [sessions, t]);
 
-  if (switcher.status !== "open" || shownSessions !== switcher.sessions) {
+  // It opens over whatever is on screen, a dialog or menu included. Registering as the top overlay
+  // stops that overlay pulling focus back from this modal's own focus trap, a tug of war that
+  // froze the page. It leaves focus alone, so Tab still reaches the switcher's shortcut.
+  const visible = switcher.status === "open" && shownSessions === switcher.sessions;
+  const overlayLayer = useGlobalWebOverlayLayer("modal", isWeb && visible);
+  const handleOverlayKey = useCallback((event: KeyboardEvent) => {
+    if (!handleAgentSwitcherKey(event.key)) {
+      return false;
+    }
+    event.preventDefault();
+    return true;
+  }, []);
+  const setOverlayScope = useWebOverlayRegistration({
+    active: isWeb && visible,
+    layer: overlayLayer,
+    onKeyDown: handleOverlayKey,
+    manageFocus: false,
+  });
+
+  if (!visible) {
     return null;
   }
   return (
-    <Modal visible transparent animationType="none" onRequestClose={cancelAgentSwitcher}>
-      {preferences.style === "list" ? (
-        <View style={styles.overlay}>
-          <View style={styles.backdrop} />
-          {/* The modal focuses its first focusable descendant. Without a focusable panel that is
+    <OverlayLayerProvider layer={isWeb ? overlayLayer : 0}>
+      <Modal visible transparent animationType="none" onRequestClose={cancelAgentSwitcher}>
+        {preferences.style === "list" ? (
+          <View style={styles.overlay}>
+            <View style={styles.backdrop} />
+            {/* The modal focuses its first focusable descendant. Without a focusable panel that is
               the first row, and a keyboard-opened list draws the focus ring around it. */}
-          <View style={styles.panel} testID="agent-switcher" focusable>
-            {rows.map((row, index) => (
-              <AgentSwitcherListRow
-                key={row.key}
-                row={row}
-                project={rowProject(row, projectsByWorkspace)}
-                index={index}
-                selected={index === switcher.index}
-              />
-            ))}
+            <View ref={setOverlayScope} style={styles.panel} testID="agent-switcher" focusable>
+              {rows.map((row, index) => (
+                <AgentSwitcherListRow
+                  key={row.key}
+                  row={row}
+                  project={rowProject(row, projectsByWorkspace)}
+                  index={index}
+                  selected={index === switcher.index}
+                />
+              ))}
+            </View>
           </View>
-        </View>
-      ) : (
-        <AgentSwitcherWheel
-          wheelStyle={preferences.style}
-          rows={rows}
-          projectsByWorkspace={projectsByWorkspace}
-          selectedIndex={switcher.index}
-        />
-      )}
-    </Modal>
+        ) : (
+          <AgentSwitcherWheel
+            scopeRef={setOverlayScope}
+            wheelStyle={preferences.style}
+            rows={rows}
+            projectsByWorkspace={projectsByWorkspace}
+            selectedIndex={switcher.index}
+          />
+        )}
+      </Modal>
+    </OverlayLayerProvider>
   );
 }
 

@@ -51,11 +51,14 @@ const ROW_TRANSITION = {
  * session sits just above the first.
  */
 export function AgentSwitcherWheel({
+  scopeRef,
   wheelStyle,
   rows,
   projectsByWorkspace,
   selectedIndex,
 }: {
+  /** Marks the stage as the switcher's overlay scope. */
+  scopeRef: (node: unknown) => void;
   wheelStyle: AgentSwitcherWheelStyle;
   rows: readonly AgentSwitcherRow[];
   projectsByWorkspace: ReadonlyMap<string, AgentSwitcherProject>;
@@ -68,7 +71,7 @@ export function AgentSwitcherWheel({
       <View style={styles.backdrop} />
       {/* The modal focuses its first focusable descendant; the stage takes it, as the list's
           panel does, so no row opens with a focus ring. */}
-      <View style={stageStyle(wheelStyle)} testID="agent-switcher" focusable>
+      <View ref={scopeRef} style={stageStyle(wheelStyle)} testID="agent-switcher" focusable>
         {wheelStyle === "wheel" ? <View style={styles.wheelLens} /> : null}
         {rows.map((row, index) => (
           <AgentSwitcherWheelRow
