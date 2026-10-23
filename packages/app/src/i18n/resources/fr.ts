@@ -2206,9 +2206,36 @@ export const fr: TranslationResources = {
       editProject: "Modifier {{projectName}}",
     },
     groupInfo: "À propos de {{title}}",
+    sessionSwitcher: {
+      title: "Changement de session",
+      info: "Maintenez Option et appuyez sur Tab pour l'ouvrir. Dans l'app de bureau Windows et Linux, utilisez Ctrl+Tab.",
+      order: {
+        label: "Ordre",
+        description: "Les sessions affichées en premier dans le sélecteur.",
+        options: {
+          lastViewed: "Dernière consultation",
+          lastActivity: "Dernière activité",
+        },
+      },
+      maxSessions: {
+        label: "Sessions affichées",
+        description: "Nombre maximal de sessions listées, de 2 à 15.",
+      },
+      style: {
+        label: "Apparence",
+        description: "L’aspect du sélecteur à son ouverture.",
+        options: {
+          list: "Liste",
+          wheel: "Molette",
+          focus: "Pile focalisée",
+          depth: "Pile en profondeur",
+        },
+      },
+    },
     sections: {
       general: "Général",
       chat: "Discussion",
+      sessionSwitcher: "Changement de session",
       appearance: "Apparence",
       sidebar: "Barre latérale",
       terminal: "Terminal",

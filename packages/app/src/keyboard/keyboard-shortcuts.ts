@@ -688,6 +688,53 @@ const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
     },
   },
 
+  // --- Recent agent sessions ---
+  // Cmd+Tab belongs to macOS, so Mac uses Option+Tab in the desktop app and the browser alike;
+  // Option with the arrows and with a click is also free there, unlike Ctrl. Elsewhere Alt+Tab
+  // switches windows, so the desktop app takes Ctrl+Tab, which browsers keep for their own tabs.
+  {
+    id: "agent-switch-recent-alt-tab-mac",
+    action: "agent.switch.recent",
+    combo: "Alt+Tab",
+    when: { mac: true },
+    payload: { type: "delta", delta: 1 },
+  },
+  {
+    id: "agent-switch-recent-alt-shift-tab-mac",
+    action: "agent.switch.recent",
+    combo: "Alt+Shift+Tab",
+    when: { mac: true },
+    payload: { type: "delta", delta: -1 },
+  },
+  {
+    id: "agent-switch-recent-ctrl-tab-non-mac-desktop",
+    action: "agent.switch.recent",
+    combo: "Ctrl+Tab",
+    when: { mac: false, desktop: true },
+    payload: { type: "delta", delta: 1 },
+  },
+  {
+    id: "agent-switch-recent-ctrl-shift-tab-non-mac-desktop",
+    action: "agent.switch.recent",
+    combo: "Ctrl+Shift+Tab",
+    when: { mac: false, desktop: true },
+    payload: { type: "delta", delta: -1 },
+  },
+  {
+    id: "agent-switch-recent-alt-tab-non-mac-web",
+    action: "agent.switch.recent",
+    combo: "Alt+Tab",
+    when: { mac: false, desktop: false },
+    payload: { type: "delta", delta: 1 },
+  },
+  {
+    id: "agent-switch-recent-alt-shift-tab-non-mac-web",
+    action: "agent.switch.recent",
+    combo: "Alt+Shift+Tab",
+    when: { mac: false, desktop: false },
+    payload: { type: "delta", delta: -1 },
+  },
+
   // --- Tab relative navigation ---
   {
     id: "workspace-tab-navigate-relative-alt-shift-left",

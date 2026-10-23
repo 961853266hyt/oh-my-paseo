@@ -1411,3 +1411,53 @@ describe("shortcut capture completion", () => {
     expect(isShortcutCaptureComplete("show-shortcuts", ["Ctrl+0"])).toBe(true);
   });
 });
+
+describe("recent agent session switcher shortcuts", () => {
+  const optionTab = { key: "Tab", code: "Tab", altKey: true };
+  const optionShiftTab = { key: "Tab", code: "Tab", altKey: true, shiftKey: true };
+  const ctrlTab = { key: "Tab", code: "Tab", ctrlKey: true };
+  const ctrlShiftTab = { key: "Tab", code: "Tab", ctrlKey: true, shiftKey: true };
+  const macDesktop = { isMac: true, isDesktop: true };
+  const otherDesktop = { isMac: false, isDesktop: true };
+
+  it("uses Option+Tab on the Mac desktop app, as on the web, and leaves Ctrl+Tab alone", () => {
+    expectShortcutResolution({
+      event: optionTab,
+      context: macDesktop,
+      action: "agent.switch.recent",
+      payload: { delta: 1 },
+    });
+    expectShortcutResolution({
+      event: optionShiftTab,
+      context: macDesktop,
+      action: "agent.switch.recent",
+      payload: { delta: -1 },
+    });
+    expectNoShortcutResolution({ event: ctrlTab, context: macDesktop });
+  });
+
+  it("uses Ctrl+Tab on the Windows and Linux desktop app, where Alt+Tab switches windows", () => {
+    expectShortcutResolution({
+      event: ctrlTab,
+      context: otherDesktop,
+      action: "agent.switch.recent",
+      payload: { delta: 1 },
+    });
+    expectShortcutResolution({
+      event: ctrlShiftTab,
+      context: otherDesktop,
+      action: "agent.switch.recent",
+      payload: { delta: -1 },
+    });
+  });
+
+  it("uses Option+Tab on the web, where browsers keep Ctrl+Tab", () => {
+    expectShortcutResolution({
+      event: optionTab,
+      context: { isMac: true, isDesktop: false },
+      action: "agent.switch.recent",
+      payload: { delta: 1 },
+    });
+    expectNoShortcutResolution({ event: ctrlTab, context: { isMac: true, isDesktop: false } });
+  });
+});

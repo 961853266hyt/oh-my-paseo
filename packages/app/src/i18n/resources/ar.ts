@@ -2194,9 +2194,36 @@ export const ar: TranslationResources = {
       editProject: "تحرير{{projectName}}",
     },
     groupInfo: "حول{{title}}",
+    sessionSwitcher: {
+      title: "تبديل الجلسات",
+      info: "اضغط مع الاستمرار على Option ثم Tab لفتحه. في تطبيق سطح المكتب على Windows وLinux، استخدم Ctrl+Tab.",
+      order: {
+        label: "الترتيب",
+        description: "الجلسات التي تظهر أولًا في أداة التبديل.",
+        options: {
+          lastViewed: "آخر عرض",
+          lastActivity: "آخر نشاط",
+        },
+      },
+      maxSessions: {
+        label: "عدد الجلسات المعروضة",
+        description: "الحد الأقصى لعدد الجلسات في القائمة، من 2 إلى 15.",
+      },
+      style: {
+        label: "النمط",
+        description: "شكل المبدّل عند فتحه.",
+        options: {
+          list: "قائمة",
+          wheel: "عجلة",
+          focus: "مكدّس التركيز",
+          depth: "مكدّس العمق",
+        },
+      },
+    },
     sections: {
       general: "عام",
       chat: "الدردشة",
+      sessionSwitcher: "تبديل الجلسات",
       appearance: "مظهر",
       sidebar: "الشريط الجانبي",
       terminal: "الطرفية",

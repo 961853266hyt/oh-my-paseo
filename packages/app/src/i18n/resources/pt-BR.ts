@@ -2191,9 +2191,36 @@ export const ptBR: TranslationResources = {
       editProject: "Editar {{projectName}}",
     },
     groupInfo: "Sobre {{title}}",
+    sessionSwitcher: {
+      title: "Troca de sessão",
+      info: "Segure Option e pressione Tab para abrir. No app para desktop no Windows e no Linux, use Ctrl+Tab.",
+      order: {
+        label: "Ordem",
+        description: "Quais sessões aparecem primeiro no seletor.",
+        options: {
+          lastViewed: "Vista por último",
+          lastActivity: "Última atividade",
+        },
+      },
+      maxSessions: {
+        label: "Sessões exibidas",
+        description: "Número máximo de sessões na lista, de 2 a 15.",
+      },
+      style: {
+        label: "Estilo",
+        description: "Como o seletor aparece ao abrir.",
+        options: {
+          list: "Lista",
+          wheel: "Roda",
+          focus: "Pilha em foco",
+          depth: "Pilha em profundidade",
+        },
+      },
+    },
     sections: {
       general: "Geral",
       chat: "Chat",
+      sessionSwitcher: "Troca de sessão",
       appearance: "Aparência",
       sidebar: "Barra lateral",
       terminal: "Terminal",

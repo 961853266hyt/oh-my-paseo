@@ -41,6 +41,26 @@ import {
   useActiveWorkspaceSelection,
 } from "@/stores/navigation-active-workspace-store";
 import { dispatchTopWebOverlayKeyDown, keyBelongsToDomPopover } from "@/lib/overlay-root";
+import {
+  cancelAgentSwitcher,
+  commitAgentSwitcher,
+  handleAgentSwitcherKey,
+  stepAgentSwitcherFromKeyboard,
+} from "@/agent-switcher/switcher";
+
+function hasModifierHeld(event: KeyboardEvent | null): boolean {
+  return !!event && (event.ctrlKey || event.metaKey || event.altKey);
+}
+
+function performAgentSwitcherStep(delta: 1 | -1, event: KeyboardEvent | null): boolean {
+  const opened = stepAgentSwitcherFromKeyboard(delta);
+  // Like Cmd+Tab, the choice lands when the modifiers are let go. A binding without one has
+  // nothing to release, so it switches at once.
+  if (opened && !hasModifierHeld(event)) {
+    commitAgentSwitcher();
+  }
+  return opened;
+}
 
 export function useKeyboardShortcuts({
   enabled,
@@ -211,6 +231,8 @@ export function useKeyboardShortcuts({
       case "shortcuts-dialog-toggle":
         useKeyboardShortcutsStore.getState().setShortcutsDialogOpen(action.nextOpen);
         return true;
+      case "agent-switcher-step":
+        return performAgentSwitcherStep(action.delta, event);
     }
   };
 
@@ -317,6 +339,12 @@ export function useKeyboardShortcuts({
       return;
     }
 
+    if (handleAgentSwitcherKey(event.key ?? "")) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (dispatchTopWebOverlayKeyDown(event)) {
       return;
     }
@@ -371,6 +399,12 @@ export function useKeyboardShortcuts({
     if (key === badgeModifierKey) {
       setBadgeModifierDown(false);
     }
+    if (
+      useKeyboardShortcutsStore.getState().agentSwitcher.status === "open" &&
+      !hasModifierHeld(event)
+    ) {
+      commitAgentSwitcher();
+    }
   });
 
   const handleBrowserShortcutInput = useStableEvent((payload: unknown) => {
@@ -392,6 +426,7 @@ export function useKeyboardShortcuts({
 
     const handleBlurOrHide = () => {
       resetModifiers();
+      cancelAgentSwitcher();
     };
 
     window.addEventListener("keydown", handleKeyDown, true);
