@@ -1,4 +1,5 @@
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useContainedControlSize } from "@/components/ui/control-size";
 import {
   default as React,
   useCallback,
@@ -163,7 +164,7 @@ const styles = StyleSheet.create((theme) => {
 export function Button({
   children,
   variant = "secondary",
-  size = "md",
+  size: sizeProp,
   leftIcon,
   trailing,
   style,
@@ -186,6 +187,8 @@ export function Button({
   }
 >) {
   const [hovered, setHovered] = useState(false);
+  const containedSize = useContainedControlSize();
+  const size = sizeProp ?? containedSize ?? "md";
   const isDisabled = disabled || loading;
 
   let variantStyle: ViewStyle;
