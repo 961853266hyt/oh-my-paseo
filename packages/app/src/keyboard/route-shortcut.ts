@@ -33,7 +33,8 @@ export type ShortcutAction =
   | { kind: "open-project-picker" }
   | { kind: "callback"; name: ShortcutCallbackName }
   | { kind: "command-center-toggle"; nextOpen: boolean; scope?: "files" }
-  | { kind: "shortcuts-dialog-toggle"; nextOpen: boolean };
+  | { kind: "shortcuts-dialog-toggle"; nextOpen: boolean }
+  | { kind: "agent-switcher-step"; delta: 1 | -1 };
 
 const NONE: ShortcutAction = { kind: "none" };
 
@@ -201,6 +202,10 @@ export function routeKeyboardShortcut(
       return routeWorkspaceNavigateIndex(input.payload, ctx);
     case "workspace.navigate.relative":
       return routeWorkspaceNavigateRelative(input.payload, ctx);
+    case "agent.switch.recent":
+      return hasPayloadKey(input.payload, "delta")
+        ? { kind: "agent-switcher-step", delta: input.payload.delta }
+        : NONE;
     case "message-input.action":
       return routeMessageInputAction(input.payload);
     case "agent.new":

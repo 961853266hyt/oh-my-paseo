@@ -2,6 +2,11 @@ import { isSyntaxThemeId, type SyntaxThemeId } from "@getpaseo/highlight";
 import type { ActiveTurnBehavior } from "@getpaseo/protocol/messages";
 import type { QueryClient } from "@tanstack/react-query";
 import type { DesktopSettings } from "@/desktop/settings/desktop-settings";
+import {
+  AGENT_SWITCHER_STYLES,
+  type AgentSwitcherOrder,
+  type AgentSwitcherStyle,
+} from "@/agent-switcher/model";
 import type { AppLanguage } from "@/i18n/locales";
 import type { SidebarNavPreference } from "@/sidebar-nav/model";
 import {
@@ -108,7 +113,25 @@ export interface AppSettings {
   /** Desktop-only preferences for implicit opens into the ordinary side pane. */
   openInSidePane: OpenInSidePanePreferences;
   pullRequestOpenLocation: PullRequestOpenLocation;
+  agentSwitcher: AgentSwitcherPreferences;
 }
+
+export interface AgentSwitcherPreferences {
+  /** Which sessions the recent-session switcher lists first. */
+  order: AgentSwitcherOrder;
+  /** How many sessions the switcher lists at most. */
+  maxSessions: number;
+  /** How the switcher draws its list. */
+  style: AgentSwitcherStyle;
+}
+
+export const MIN_AGENT_SWITCHER_SESSIONS = 2;
+export const MAX_AGENT_SWITCHER_SESSIONS = 15;
+export const DEFAULT_AGENT_SWITCHER_PREFERENCES: AgentSwitcherPreferences = {
+  order: "lastViewed",
+  maxSessions: 10,
+  style: "list",
+};
 
 export type AppSettingsUpdate =
   | Partial<AppSettings>
@@ -163,6 +186,7 @@ export const DEFAULT_CLIENT_SETTINGS: AppSettings = {
   filePanelAssociations: {},
   openInSidePane: DEFAULT_OPEN_IN_SIDE_PANE_PREFERENCES,
   pullRequestOpenLocation: "explorer",
+  agentSwitcher: DEFAULT_AGENT_SWITCHER_PREFERENCES,
 };
 
 export const DEFAULT_APP_SETTINGS: Settings = {
@@ -288,6 +312,15 @@ const StoredAppSettingsSchema = z
         legacyPullRequestsInSidePane: undefined,
       }),
     pullRequestOpenLocation: z.enum(["main", "side", "explorer"]).optional(),
+    agentSwitcher: z
+      .object({
+        order: z.enum(["lastViewed", "lastActivity"]).catch("lastViewed"),
+        maxSessions: clampedNumber(MIN_AGENT_SWITCHER_SESSIONS, MAX_AGENT_SWITCHER_SESSIONS).catch(
+          DEFAULT_AGENT_SWITCHER_PREFERENCES.maxSessions,
+        ),
+        style: z.enum(AGENT_SWITCHER_STYLES).catch(DEFAULT_AGENT_SWITCHER_PREFERENCES.style),
+      })
+      .catch(DEFAULT_AGENT_SWITCHER_PREFERENCES),
     // COMPAT(explorerSidebarRouting): replaced by source-specific side-pane preferences in v0.6.
     openSupportingTabsInSidePanel: z.boolean().optional().catch(undefined),
     // COMPAT(rendererDesktopSettings): these fields used to share this renderer-owned key.

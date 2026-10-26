@@ -2184,9 +2184,36 @@ export const ko: TranslationResources = {
       editProject: "{{projectName}} 편집",
     },
     groupInfo: "{{title}} 정보",
+    sessionSwitcher: {
+      title: "세션 전환",
+      info: "Option 키를 누른 채 Tab을 누르면 열립니다. Windows 및 Linux 데스크톱 앱에서는 Ctrl+Tab을 사용하세요.",
+      order: {
+        label: "정렬 순서",
+        description: "전환기에서 먼저 보여줄 세션입니다.",
+        options: {
+          lastViewed: "마지막으로 본 순서",
+          lastActivity: "마지막 활동 순서",
+        },
+      },
+      maxSessions: {
+        label: "표시 개수",
+        description: "전환기에 표시할 최대 세션 수입니다(2~15).",
+      },
+      style: {
+        label: "스타일",
+        description: "전환기를 열었을 때의 모양입니다.",
+        options: {
+          list: "목록",
+          wheel: "휠",
+          focus: "포커스 스택",
+          depth: "깊이 스택",
+        },
+      },
+    },
     sections: {
       general: "일반",
       chat: "채팅",
+      sessionSwitcher: "세션 전환",
       appearance: "모양",
       sidebar: "사이드바",
       terminal: "터미널",

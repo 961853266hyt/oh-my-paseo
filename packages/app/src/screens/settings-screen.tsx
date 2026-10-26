@@ -17,6 +17,7 @@ import type { TFunction } from "i18next";
 import { Buffer } from "buffer";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   Settings,
   Palette,
   Server,
@@ -54,6 +55,7 @@ import { AppearanceSection } from "@/screens/settings/appearance/appearance-sect
 import { OpenLocationSection } from "@/screens/settings/open-location/open-location-section";
 import { TerminalSection } from "@/screens/settings/terminal/terminal-section";
 import { ChatSection } from "@/screens/settings/chat/chat-section";
+import { SessionSwitcherSection } from "@/screens/settings/session-switcher-section";
 import { SidebarNavSection } from "@/screens/settings/sidebar/sidebar-nav-section";
 import { SendingSection } from "@/screens/settings/general/sending-section";
 import {
@@ -172,6 +174,12 @@ const SIDEBAR_SECTION_ITEMS: SidebarSectionItem[] = [
     Content: SidebarNavSection,
   },
   { id: "chat", labelKey: "settings.sections.chat", icon: MessageSquare, Content: ChatSection },
+  {
+    id: "session-switcher",
+    labelKey: "settings.sections.sessionSwitcher",
+    icon: ArrowLeftRight,
+    Content: SessionSwitcherSection,
+  },
   {
     id: "terminal",
     labelKey: "settings.sections.terminal",

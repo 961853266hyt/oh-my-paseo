@@ -2207,9 +2207,36 @@ export const ru: TranslationResources = {
       editProject: "Изменить {{projectName}}",
     },
     groupInfo: "О разделе «{{title}}»",
+    sessionSwitcher: {
+      title: "Переключение сессий",
+      info: "Удерживайте Option и нажмите Tab, чтобы открыть. В настольном приложении для Windows и Linux используйте Ctrl+Tab.",
+      order: {
+        label: "Порядок",
+        description: "Какие сессии показывать первыми в переключателе.",
+        options: {
+          lastViewed: "По последнему просмотру",
+          lastActivity: "По последней активности",
+        },
+      },
+      maxSessions: {
+        label: "Показывать сессий",
+        description: "Максимальное число сессий в списке — от 2 до 15.",
+      },
+      style: {
+        label: "Стиль",
+        description: "Как выглядит переключатель при открытии.",
+        options: {
+          list: "Список",
+          wheel: "Колесо",
+          focus: "Стопка с фокусом",
+          depth: "Стопка с глубиной",
+        },
+      },
+    },
     sections: {
       general: "Основные",
       chat: "Чат",
+      sessionSwitcher: "Переключение сессий",
       appearance: "Оформление",
       sidebar: "Боковая панель",
       terminal: "Терминал",

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { CLOSED_AGENT_SWITCHER, type AgentSwitcherState } from "@/agent-switcher/model";
 import type { SidebarShortcutWorkspaceTarget } from "@/utils/sidebar-shortcuts";
 
 const SHORTCUT_BADGE_DELAY_MS = 150;
@@ -9,6 +10,7 @@ interface KeyboardShortcutsState {
   commandCenterOpen: boolean;
   commandCenterScope: CommandCenterScope;
   shortcutsDialogOpen: boolean;
+  agentSwitcher: AgentSwitcherState;
   capturingShortcut: boolean;
   altDown: boolean;
   cmdOrCtrlDown: boolean;
@@ -19,6 +21,7 @@ interface KeyboardShortcutsState {
   setCommandCenterOpen: (open: boolean, scope?: CommandCenterScope) => void;
   setCommandCenterScope: (scope: CommandCenterScope) => void;
   setShortcutsDialogOpen: (open: boolean) => void;
+  setAgentSwitcher: (state: AgentSwitcherState) => void;
   setCapturingShortcut: (capturing: boolean) => void;
   setAltDown: (down: boolean) => void;
   setCmdOrCtrlDown: (down: boolean) => void;
@@ -53,6 +56,7 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>((set, ge
   commandCenterOpen: false,
   commandCenterScope: null,
   shortcutsDialogOpen: false,
+  agentSwitcher: CLOSED_AGENT_SWITCHER,
   capturingShortcut: false,
   altDown: false,
   cmdOrCtrlDown: false,
@@ -63,6 +67,7 @@ export const useKeyboardShortcutsStore = create<KeyboardShortcutsState>((set, ge
     set({ commandCenterOpen: open, commandCenterScope: open ? scope : null }),
   setCommandCenterScope: (scope) => set({ commandCenterScope: scope }),
   setShortcutsDialogOpen: (open) => set({ shortcutsDialogOpen: open }),
+  setAgentSwitcher: (state) => set({ agentSwitcher: state }),
   setCapturingShortcut: (capturing) => set({ capturingShortcut: capturing }),
   setAltDown: (down) => {
     set({ altDown: down });

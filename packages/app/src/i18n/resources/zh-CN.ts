@@ -2152,9 +2152,36 @@ export const zhCN: TranslationResources = {
       editProject: "编辑 {{projectName}}",
     },
     groupInfo: "关于 {{title}}",
+    sessionSwitcher: {
+      title: "会话切换",
+      info: "按住 Option 再按 Tab 打开。在 Windows 和 Linux 桌面版中使用 Ctrl+Tab。",
+      order: {
+        label: "排序方式",
+        description: "切换器里哪些会话排在前面。",
+        options: {
+          lastViewed: "最后看过",
+          lastActivity: "最后活动",
+        },
+      },
+      maxSessions: {
+        label: "显示数量",
+        description: "切换器最多列出的会话数，范围 2 到 15。",
+      },
+      style: {
+        label: "样式",
+        description: "切换器打开时的外观。",
+        options: {
+          list: "列表",
+          wheel: "滚轮",
+          focus: "聚焦堆叠",
+          depth: "景深堆叠",
+        },
+      },
+    },
     sections: {
       general: "通用",
       chat: "聊天",
+      sessionSwitcher: "会话切换",
       appearance: "外观",
       sidebar: "侧边栏",
       terminal: "终端",

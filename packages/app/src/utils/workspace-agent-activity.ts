@@ -8,7 +8,8 @@ export interface WorkspaceAgentActivity {
   enteredAt: Date | null;
 }
 
-function workspaceAgentStatus(agent: Agent): Agent["status"] {
+/** The status the sidebar shows for an agent: running while a turn is open, idle once it closes. */
+export function workspaceAgentStatus(agent: Agent): Agent["status"] {
   if (agent.turn.phase === "open") return "running";
   return agent.status === "running" ? "idle" : agent.status;
 }
